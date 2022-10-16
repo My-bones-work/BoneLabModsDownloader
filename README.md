@@ -16,4 +16,6 @@ If you have done the setup once then it'll just read the settings from the confi
 
 When you run it a window should pop up where it'll tell you how many subscriptions it found, and it should start downloading and unpacking all the zip files.
 
+If you re-run the script at a later date, it will check your subscriptions for updates and it'll only download mods from new subscriptions or mods which have been updated.
+
 If it fails to start, then open internet explorer and select an option on the Microsoft SmartScreen popup that you'll probably get. The `Invoke-WebRequest` command that this script heavily relies on internally uses Internet Explorer under the hood so if you haven't accepted or rejected the SmartScreen thing then it'll refuse to do anything.
