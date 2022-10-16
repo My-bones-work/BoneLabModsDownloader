@@ -1,17 +1,115 @@
-# Replace this placeholder token with your OAuth access token, it should have a similar length as this one. Make sure to leave the single quotes at the start and end in place.
-$token='qFSDqfsgDSGsergfsdgshNotARealAccessTokenqsdfhiqsfUseYourOwnTokendqsihfqsdfSDFqgfsdfgsfdogqdfGSDGsdgksdfpgkSDFGJOQJFGsqdfgojsqdfgqoigjisodfhgioqhlgerioqghfuilshqfgfQDFGJOQJgdfqgfdGKQSDgQdsFGqrgqsfdgsdfgQgNoEasterEggsHereqsdfQSdfqsfSDfqsfqsdFFSDQFDqsfdsqfrEHYrujhTFGJHFjhfGjRFyjRdyzTryztRYegsgZrtheRjeyjyedythzsgfSdgzsHtEytdrhjdJHUrkiTkDhgfEDhtzstRhzsytRYtreHyehdHDgheRTYteSyhsehrtyjzeutzutztyERygfdYGzrtyTerUyteuytetyztytrzYZyTeRTYeuhUJEDZTryzrUjuytkRFHGJDFTYEtyeuyeuytYesITypedThisWholeThingManuallysdfgsdfgsdgFSDGsfdgqFGQSDgsdfGSHSDFghsdHBSDBHShsEQgFSdgSDFGsdgsdfGSdhfgdhshtrsssssssssssshgdhSDFGsfdgresqgfggggggggggggggggggggggggdfffffffffffffffffffffffffffffffgggggggggggggggggggggoijioojqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqoooooooooo^prgjkiajraeioufn,aoutfoiparfopa,tfuaop,f,atpod,ap,ifauipofnc,upaiozeruoifanuzerpuicfnnapioprjioopaoioiodfsqjjfdlkqklklflkqlfllBcHMsqgfsdgfsdHSGFHsdqsfdhqAZERTYUOPMLKHGHFDGHSHGSHTRStrdhgsghsdhugkfdhhqghreqguihsergquigiiuiiuuiqlllllllsfldgoe8627v68st7h2sr3t27gv3s5gf2v4s3g428er4qb27s3ytr1v38zq1v83sf4g5v3sfdg1er8s1v5fsd34gs365fg4sr89e4g3f65g4s3r8e4gfsDamnThisThingIsLong...qfsdgoihsdfuighuisghyfuqkyfuegzgfqskfdqhfdhgqfhdqskfejhiqzulfhiqlzghqlfjdqs<ilhgqergjhqsregioqsergldsqfjqozeihfqlihgaqmrighliqsehgruseiqhguilqhaghrulqhgliuqergsh54gsdf364hgfdj364sg36h436h4s5th3g54sgsquefgyqufgyquefgakfguyqfuioqqpgjnqoueizhfrqzobrgqogqogfqsilghquisfgquilrgoqigdbqfuipqgbfiiqepgqighprqeghqeigpqseguipqibguiqpbbgiufqbhrlgfhqsdjfhqsfgjsbghjbsqdfhgbsdfjbgfdsgfdgfFinallyAlmostDonedhfjshfjdhfjsfhghdsfghrsejDPUG7csdfgFgz'
+# Used to simplify y/n prompts further in the script
+function User-Confirm
+{
+	param ([string]$msg)
+	do 
+	{ 
+		$yn = Read-Host "$msg [y/n]";  
+		if ($yn -eq 'n') 
+		{
+			return $false
+		}
+		elseif ($yn -ne 'y') 
+		{
+			Echo "Enter y fer yes or n for no"
+		} 
+	} 
+	while($yn -ne "y")
+	return $true
+}
 
-# This is the default BONELAB mod folder location, change this if you moved your mods folder or want to send the decompressed files to another folder.
-$destination="$env:appdata\..\LocalLow\Stress Level Zero\BONELAB\Mods"
+if (Test-Path config.json)
+{
+	Echo "Reading settings from config.json."
+	$config=Get-Content config.json | ConvertFrom-Json 
+}
+else
+{
+	$config=@{}
+	
+	$pcvr=$false
+	Echo "No configuration file found. Let's set up a new one."
+	Echo "Are you running BONELAB on Windows / Steam / PCVR? Type 'y' for yes or 'n' for no."
+	if (User-Confirm "Download mods for Windows?")
+	{
+		$platf="windows"
+		$dest="$env:appdata\..\LocalLow\Stress Level Zero\BONELAB\Mods"
+		$pcvr=$true
+	}
+	else
+	{
+		Echo "Are you running BONELAB on Quest 2?"
+		if (User-Confirm "Download mods for android/quest?")
+		{
+			$platf="android"
+			$dest=(Get-Location).Path+"\mods"
+		}
+	}
+	if($platf -eq $null)
+	{
+		Echo "Sorry, there are no other supported platforms :("
+		Pause
+		Exit
+	}
+	
+	$unpack=User-Confirm "Do you wish to automatically unpack or install downloaded/updated mods?"
+	
+	if($unpack)
+	{
+		Echo "The default installation path is: $dest"
+		if($pcvr)
+		{
+			Echo "(this is the default location for your BONELAB mod folder)"
+		}
+		
+		if(-not(User-Confirm "Install/unpack mods to that location?"))
+		{
+			Echo "Enter the path to the desired location."
+			$dest=Read-Host "Desired location"
+		}
+		if(-not(Test-Path $dest))
+		{
+			Mkdir $dest
+		}
+	}
+	
+	Echo "Enter an OAuth token with read access."
+	Echo "Check the readme if you don't know how to set this up".
+	do
+	{
+		$tok=Read-Host "OAuth token"
+		if($tok.length -lt 1000)
+		{
+			Echo "This doesn't seem to be a valid OAuth token. Make sure to copy an OAuth token, NOT an API access key"
+			Echo "(a proper OAuth token should be much longer than the value you entered)"
+		}
+	}
+	while($tok.length -lt 1000)
+	Echo "Thank you, that should be everything I need."
+	
+	$config.token=$tok
+	$config.platform=$platf
+	$config.unpack=$unpack
+	$config.destination=$dest
+	
+	# Write initial configuration to the config file
+	# (so that the user doesn't have to go trough the setup again if the script doesn't run completely)
+	$config | ConvertTo-Json | Set-Content config.json
+	
+	Echo "I'll now start downloading all your subscribed mods."
+	Echo '' '' '' ''
+}
 
+$token=$config.token
+$destination=$config.destination
+$unpack=$config.unpack
 
-# The rest of the script follows below, but you shouldn't have to adjust any parameters there.
-
-
-
+if (-not(Test-Path zips))
+{
+	Mkdir zips
+}
 
 Echo "Checking subscriptions..."
-# Request the list of subscriptions this account has for BONELAB (game id 3809)
 $sublist_json=Invoke-WebRequest -URI https://api.mod.io/v1/me/subscribed?game_id=3809 -Method GET -Headers @{"Authorization"="Bearer ${token}";"Accept"="application/json"}
 $sublist=ConvertFrom-Json $sublist_json.Content
 
@@ -19,42 +117,69 @@ $len=$sublist.data.length
 [string]$len_str=$len
 Echo "Found $len_str subscription(s)."
 
-# Iterate over the list of subscriptions
 for ($i = 0; $i -lt $len; $i++)
 {
-  # Request a list of files that this mod has
 	$sub=$sublist.data[$i]
 	$subname=$sub.name
 	Echo "Requesting info about subscription $subname..."
 	[string]$modid=$sub.id
 	$mod_json=Invoke-WebRequest -URI https://api.mod.io/v1/games/3809/mods/${modid}/files -Method GET -Headers @{"Authorization"="Bearer ${token}";"Accept"="application/json"}
 	$mod=ConvertFrom-Json $mod_json.Content
+	
+	# Filter mod files based on platform
+	$mod.data=@($mod.data)
+	$mod.data=$mod.data | Where-Object { $_.platforms.Where({ $_.platform -eq "windows"}, 'First').Count -gt 0 }
+	
+	# get latest version in remaining files and keep only files matching that version
+	$mod.data=@($mod.data)
+	$lastver=($mod.data | Select-Object -ExpandProperty version | Measure -Maximum).Maximum
+	$mod.data=$mod.data | Where-Object { $_.version -ge $lastver }
+	$mod.data=@($mod.data)
+	Echo "Latest version: $lastver"
+	
+	# Write data about this sub to config
+	$name=$sub.name_id
+	
+	$update=$true
+	if ($config.${name} -eq $null)
+	{
+		$config.${name}=@{}
+		$config.${name}.date_updated=$sub.date_updated
+	}
+	elseif ($sub.date_updated -le $config.${name}.date_updated){
+		$update=$false #already up to date
+		Echo "$subname seems to be up to date - checking for missing files..."
+	}
 
 	$datalen=$mod.data.length
 	[string]$datalen_str=$datalen
 	Echo "$subname contains $datalen_str file(s)."
 	
-  # Iterate over that list of files
 	for ($j = 0; $j -lt $datalen; $j++)
 	{
 		$data=$mod.data[$j]
 		$file=$data.filename
-    
-    # If no file with the same name exists locally, download the mod
-		if (-not(Test-Path $file))
+		if (-not(Test-Path zips/$file) -or $update)
 		{
 			Echo "  Downloading $file..."
 			$url=$data.download.binary_url
-			Invoke-WebRequest -URI $url -OutFile $file
-			Echo "  Unpacking $file..."
-			Expand-Archive $file -DestinationPath $destination -Force
+			Invoke-WebRequest -URI $url -OutFile zips/$file
+			if ($unpack)
+			{
+				Echo "  Unpacking $file..."
+				Expand-Archive zips/$file -DestinationPath $destination -Force
+			}
 		}
 		else
 		{
-			Echo "  Skipped $file (already exists)."
+			Echo "  Skipped $file (already exists and up to date)."
 		}
 	}
 }
 
-# Make sure the window doesn't immediately close if an error happens
+# Write updates to the config file
+$config | ConvertTo-Json | Set-Content config.json
+
+Echo '' '' '' '' '' '' ''
+Echo "This seems to be everything :)"
 Pause
