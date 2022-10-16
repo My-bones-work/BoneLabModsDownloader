@@ -143,7 +143,7 @@ for ($i = 0; $i -lt $len; $i++)
 	$update=$true
 	if ($config.${name} -eq $null)
 	{
-		$config.${name}=@{}
+		$config | Add-Member -Name $name -Value @{} -MemberType NoteProperty
 		$config.${name}.date_updated=$sub.date_updated
 	}
 	elseif ($sub.date_updated -le $config.${name}.date_updated){
