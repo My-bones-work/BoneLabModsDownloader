@@ -110,7 +110,7 @@ if (-not(Test-Path zips))
 }
 
 Echo "Checking subscriptions..."
-$sublist_json=Invoke-WebRequest -URI https://api.mod.io/v1/me/subscribed?game_id=3809 -Method GET -Headers @{"Authorization"="Bearer ${token}";"Accept"="application/json"}
+$sublist_json=Invoke-WebRequest -UseBasicParsing -URI https://api.mod.io/v1/me/subscribed?game_id=3809 -Method GET -Headers @{"Authorization"="Bearer ${token}";"Accept"="application/json"}
 $sublist=ConvertFrom-Json $sublist_json.Content
 
 $len=$sublist.data.length
@@ -123,7 +123,7 @@ for ($i = 0; $i -lt $len; $i++)
 	$subname=$sub.name
 	Echo "Requesting info about subscription $subname..."
 	[string]$modid=$sub.id
-	$mod_json=Invoke-WebRequest -URI https://api.mod.io/v1/games/3809/mods/${modid}/files -Method GET -Headers @{"Authorization"="Bearer ${token}";"Accept"="application/json"}
+	$mod_json=Invoke-WebRequest -UseBasicParsing -URI https://api.mod.io/v1/games/3809/mods/${modid}/files -Method GET -Headers @{"Authorization"="Bearer ${token}";"Accept"="application/json"}
 	$mod=ConvertFrom-Json $mod_json.Content
 	
 	# Filter mod files based on platform
@@ -163,7 +163,7 @@ for ($i = 0; $i -lt $len; $i++)
 		{
 			Echo "  Downloading $file..."
 			$url=$data.download.binary_url
-			Invoke-WebRequest -URI $url -OutFile zips/$file
+			Invoke-WebRequest -UseBasicParsing -URI $url -OutFile zips/$file
 			if ($unpack)
 			{
 				Echo "  Unpacking $file..."
